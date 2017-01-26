@@ -1,0 +1,51 @@
+/* */
+
+div.headdiv{
+	margin: auto;
+	width: 600px;
+	height: 400px;
+	margin-top: 100px;
+}
+
+div.welcomeimage{
+	float: left;
+	width: 336px;
+	height: 396px;
+	margin-right: 10px;
+	border: 2px solid;
+}
+
+div.welcomeimage img{
+	width: 336px;
+	height: 396px;
+}
+
+div.rightcolumn{
+	height: 400px;
+}
+
+div.signin{
+	border: 2px solid;
+	float: right;
+	width: 246px;
+	height: 100px;
+	margin-bottom: 10px;
+
+}
+
+div.signup{
+	border: 2px solid;
+	float: right;
+	width: 246px;
+	height: 282px;
+}
+
+div.headdiv input[type="text"], input[type="password"]{
+	float:right;
+}
+
+div.headdiv form{
+	padding: 5px;
+	margin-bottom: 0px;
+	
+}

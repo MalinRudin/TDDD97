@@ -1,0 +1,93 @@
+/* */
+div#main{
+	margin: auto;
+	width: 600px;
+}
+
+div.headdiv{
+	margin: auto;
+	width: 600px;
+	height: 400px;
+	margin-top: 100px;
+}
+
+div.welcomeimage{
+	float: left;
+	width: 336px;
+	height: 396px;
+	margin-right: 10px;
+	border: 2px solid;
+}
+
+div.welcomeimage img{
+	width: 336px;
+	height: 396px;
+}
+
+div.rightcolumn{
+	height: 400px;
+}
+
+div.signin{
+	border: 2px solid;
+	float: right;
+	width: 246px;
+	height: 100px;
+	margin-bottom: 10px;
+
+}
+
+div.signup{
+	border: 2px solid;
+	float: right;
+	width: 246px;
+	height: 282px;
+}
+
+div.headdiv input, select{
+	float:right;
+}
+
+div.headdiv form{
+	padding: 5px;
+	margin-bottom: 0px;
+	
+}
+
+#errorMSG {
+	margin: auto;
+	width: 600px;
+	text-align: center;
+	background-color: red;
+}
+
+#successMSG {
+	margin: auto;
+	width: 600px;
+	text-align: center;
+	background-color: green;
+}
+
+.tabcontent{
+    display: none;
+}
+
+ul.tab {
+    list-style-type: none;
+	border: 1px solid #ccc;
+	overflow: hidden;
+}
+
+ul.tab li {float: left;}
+
+ul.tab li a {
+    display: inline-block;
+	color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 17px;
+	
+}
+
