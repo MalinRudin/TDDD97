@@ -55,20 +55,27 @@
 </ul>
 
 <div id="Home" class="tabcontent">
-<p> Home tab </p>
+	<div id="info" class="profileInfo"></div>
+	<div id="post" class="profilePost"></div>
+	<button onclick="viewProfileWall()">Uppdate wall</button>
+	<div id="wall" class="profileWall"></div>
 </div>
 
 <div id="Browse" class="tabcontent">
-<p> Browse tab </p>
+	<input type="text" id="search">
+	<button onclick="search()">Search user</button>
+	<div id="browseInfo" class="profileInfo"></div>
+	<div id="browsePost" class="profilePost"></div>
+	<div id="browseWall" class="profileWall"></div>
 </div>
 
 <div id="Account" class="tabcontent">
 Change password<br>
- -<form name="changepassword" onsubmit="return changePassword()" method="post">
- -New password: <input type="password" required name="newpassword"><br>
- -Old password: <input type="password" required name="oldpassword"><br>
- -<input type="submit" value="Change password">
- -</form>
+ <form name="changepassword" onsubmit="return changePassword()" method="post">
+ New password: <input type="password" required name="newpassword"><br>
+ Old password: <input type="password" required name="oldpassword"><br>
+ <input type="submit" value="Change password">
+ </form>
  
 <button onclick="signout()">Sign out</button>
 </div>

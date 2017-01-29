@@ -4,6 +4,11 @@ displayView = function(){
 		document.getElementById("main").innerHTML=document.getElementById("welcomeview").innerHTML;
 	}else{
 		document.getElementById("main").innerHTML=document.getElementById("profileview").innerHTML;
+		var serverRespons=serverstub.getUserDataByToken(localStorage.getItem("token"));
+		document.getElementById("info").innerHTML=viewProfileInfo(serverRespons.data);
+		localStorage.setItem("email", serverRespons.data.email);
+		document.getElementById("post").innerHTML=viewProfilePost();
+		document.getElementById("wall").innerHTML=viewProfileWall();
 		document.getElementById("Home").style.display = "block";
 	}
  
@@ -13,6 +18,7 @@ window.onload = function(){
  //You shall put your own custom code here.
  //window.alert() is not allowed to be used in your implementation.
 displayView();
+
 };
 
 function validateSingupForm() {
@@ -85,6 +91,9 @@ function openTab(evt, tabName) {
 	
 	errorMSG("");
 	
+	var serverRespons=serverstub.getUserDataByToken(localStorage.getItem("token"));
+	localStorage.setItem("email", serverRespons.data.email);
+	
 	tabcontent=document.getElementsByClassName("tabcontent");
 	for(i=0; i<tabcontent.length; i++){
 		tabcontent[i].style.display="none";
@@ -99,11 +108,11 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
 }
 
--function changePassword() {
- -	var newpsw = document.forms["changepassword"]["newpassword"].value;
- -	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
- -	
- -	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
+function changePassword() {
+ 	var newpsw = document.forms["changepassword"]["newpassword"].value;
+ 	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
+ 	
+ 	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
 	return false;
 }
 
@@ -120,6 +129,40 @@ function signout(){
 	displayView();
 }
 
+function viewProfileInfo(data) {
+	
+	var text = "First name: " + data.firstname + "<br>" +
+			   "Last name: " + data.familyname + "<br>" +
+			   "Username: " + data.email + "<br>" +
+			   "Gender: " + data.gender + "<br>" +
+			   "City: " + data.city + "<br>" +
+			   "Country: " + data.country + "<br>" 
+	
+	return text;
+}
+
+function viewProfilePost() {
+	var text = "<textarea id='message'></textarea><br>" + 
+			   "<button onclick='savePost()'>Post message</button>";
+	return text;
+}
+
+function savePost() {
+	var serverRespons=serverstub.postMessage(localStorage.getItem("token"), document.getElementById("message").value, localStorage.getItem("email"));
+	document.getElementById("message").value="";
+	//returnerar en text med meddelandena...
+	viewProfileWall();
+}
+
+function viewProfileWall() {
+	var serverRespons = serverstub.getUserMessagesByEmail(localStorage.getItem("token"), localStorage.getItem("email"));
+	var text="";
+	serverRespons.data.forEach(function(msg){
+		text += "<div class='postmsg'>" + msg.writer +": " + msg.content + "</div>";
+	});
+	return text;
+}
+
 function errorMSG(message){
 	document.getElementById("errorMSG").innerHTML=message;
 	document.getElementById("successMSG").innerHTML="";
@@ -129,3 +172,20 @@ function successMSG(message){
 	document.getElementById("errorMSG").innerHTML="";
 	document.getElementById("successMSG").innerHTML=message;
 }
+
+function search() {
+	var user = document.getElementById("search").value;
+	var serverRespons = serverstub.getUserDataByEmail(localStorage.getItem("token"), user);
+	if(serverRespons["success"]){
+		localStorage.setItem("email", user);
+	
+		document.getElementById("browseInfo").innerHTML = viewProfileInfo(serverRespons.data);
+		document.getElementById("browsePost").innerHTML = viewProfilePost();
+		document.getElementById("browseWall").innerHTML = viewProfileWall();
+	}else{
+		errorMSG(serverRespons["message"]);
+	}
+	
+}
+
+
