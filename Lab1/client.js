@@ -96,3 +96,18 @@ function openTab(evt, tabName) {
 	document.getElementById(tabName).style.display = "block";
     evt.currentTarget.className += " active";
 }
+
+function changePassword() {
+	var newpsw = document.forms["changepassword"]["newpassword"].value;
+	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
+	
+	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
+	
+	if(serverRespons["success"]){
+		document.getElementById("successMSG").innerHTML = serverRespons["message"];
+	}else{
+		document.getElementById("errorMSG").innerHTML=serverRespons["message"];
+	}
+	
+	return false;	
+}
