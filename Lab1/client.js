@@ -99,6 +99,14 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
 }
 
+-function changePassword() {
+ -	var newpsw = document.forms["changepassword"]["newpassword"].value;
+ -	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
+ -	
+ -	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
+	return false;
+}
+
 function signout(){
 	var token=localStorage.getItem("token");
 	serverRespons=serverstub.signOut(token);
@@ -106,7 +114,7 @@ function signout(){
 		localStorage.clear();
 		successMSG(serverRespons["message"]);
 	}else{
-		localStorage.clear();
+		//localStorage.clear();
 		errorMSG(serverRespons["message"]);
 	}
 	displayView();
