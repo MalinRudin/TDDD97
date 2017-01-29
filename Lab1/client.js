@@ -24,7 +24,7 @@ function validateSingupForm() {
 	}
 	
 	if(password1 != password2){
-		document.getElementById("errorMSG").innerHTML="Password dosen't match";
+		errorMSG("Password dosen't match");
 		return false;
 	}
 	var formData = new Object();
@@ -41,9 +41,9 @@ function validateSingupForm() {
 	var serverRespons = serverstub.signUp(formData);
 	
 	if(serverRespons["success"]){
-		document.getElementById("successMSG").innerHTML=serverRespons["message"];
+		successMSG(serverRespons["message"]);
 	}else{
-		document.getElementById("errorMSG").innerHTML=serverRespons["message"];
+		errorMSG(serverRespons["message"]);
 	}
 	
 	return false;
@@ -60,10 +60,10 @@ function validateSigninForm() {
 	var serverRespons = serverstub.signIn(username, password);
 	
 	if(serverRespons["success"]){
-		document.getElementById("successMSG").innerHTML=serverRespons["message"];
+		successMSG(serverRespons["message"]);
 		localStorage.setItem("token", serverRespons["data"]);
 	}else{
-		document.getElementById("errorMSG").innerHTML=serverRespons["message"];
+		errorMSG(serverRespons["message"]);
 	}
 	displayView();
 	return false;
@@ -73,7 +73,7 @@ function numberOfCharacters(psw) {
 	var n = psw.length;
 	
 	if(n < 6) {
-		document.getElementById("errorMSG").innerHTML="Password must be at least 6 characters long.";
+		errorMSG("Password must be at least 6 characters long.");
 		return false;
 	}else{
 		return true;
@@ -82,6 +82,8 @@ function numberOfCharacters(psw) {
 
 function openTab(evt, tabName) {
 	var i, tabcontent, tablinks;
+	
+	errorMSG("");
 	
 	tabcontent=document.getElementsByClassName("tabcontent");
 	for(i=0; i<tabcontent.length; i++){
@@ -97,17 +99,33 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
 }
 
-function changePassword() {
-	var newpsw = document.forms["changepassword"]["newpassword"].value;
-	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
-	
-	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
-	
+-function changePassword() {
+ -	var newpsw = document.forms["changepassword"]["newpassword"].value;
+ -	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
+ -	
+ -	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
+	return false;
+}
+
+function signout(){
+	var token=localStorage.getItem("token");
+	serverRespons=serverstub.signOut(token);
 	if(serverRespons["success"]){
-		document.getElementById("successMSG").innerHTML = serverRespons["message"];
+		localStorage.clear();
+		successMSG(serverRespons["message"]);
 	}else{
-		document.getElementById("errorMSG").innerHTML=serverRespons["message"];
+		//localStorage.clear();
+		errorMSG(serverRespons["message"]);
 	}
-	
-	return false;	
+	displayView();
+}
+
+function errorMSG(message){
+	document.getElementById("errorMSG").innerHTML=message;
+	document.getElementById("successMSG").innerHTML="";
+}
+
+function successMSG(message){
+	document.getElementById("errorMSG").innerHTML="";
+	document.getElementById("successMSG").innerHTML=message;
 }
