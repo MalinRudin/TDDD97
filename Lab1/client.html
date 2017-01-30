@@ -10,46 +10,44 @@
  <script type="text/view" id="welcomeview">
  <div class="headdiv">
 
-	<div class="welcomeimage">
-		<img src="wimage.png">
-	</div>
+	<div class="welcomeimage"></div>
 
 	<div class="rightcolumn">
-		<div class="signin">
-			Sign in<br>
+		<fieldset class="signin">
+			<legend><b>Sign in</b></legend>
 			<form name="signin" onsubmit="return validateSigninForm()" method="post">
-				Email: <input type="text" required name="email"><br>
-				Password: <input type="password" required name="password"><br>
+				<label>Email:</label><input type="email" required name="email"><br>
+				<label>Password:</label><input type="password" required name="password"><br>
 				<input type="submit" value="Sign in">
 			</form>
-		</div>
+		</fieldset>
 
-		<div class="signup">
-			Sign up<br>
+		<fieldset class="signup">
+			<legend><b>Sign up</b></legend>
 			<form name="signup" onsubmit="return validateSingupForm()" method="post">
-				Email: <input type="email" required name="email"><br>
-				Password: <input type="password" required name="password"><br>
-				Repeat psw: <input type="password" required name="password2"><br>
-				First name: <input type="text" required name="firstname"><br>
-				Family name: <input type="text" required name="familyname"><br>
-				Biological gender: <select name="gender" required>
-								   <option value=""></option>
-								   <option value="female">Female</option>
-								   <option value="male">Male</option>
+				<label>Email:</label><input type="email" required name="email"><br>
+				<label>Password:</label><input type="password" required name="password"><br>
+				<label>Repeat psw:</label><input type="password" required name="password2"><br>
+				<label>First name:</label><input type="text" required name="firstname"><br>
+				<label>Family name:</label><input type="text" required name="familyname"><br>
+				<label>Birth gender:</label><select name="gender" required>
+										<option value=""></option>
+										<option value="Female">Female</option>
+										<option value="Male">Male</option>
 								   </select><br>
-				City: <input type="text" required name="city"><br>
-				Country: <input type="text" required name="country"><br>
+				<label>City:</label><input type="text" required name="city"><br>
+				<label>Country:</label><input type="text" required name="country"><br>
 	
 				<input type="submit" value="Sign up">
 			</form>
-		</div>
+		</fieldset>
 	</div>
 </div>
 </script>
 
 <script type="text/view" id="profileview">
 <ul class="tab">
-	<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Home')">Home</a></li>
+	<li><a href="javascript:void(0)" class="tablinks active" onclick="openTab(event, 'Home')">Home</a></li>
 	<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Browse')">Browse</a></li>
 	<li><a href="javascript:void(0)" class="tablinks" onclick="openTab(event, 'Account')">Account</a></li>
 </ul>
@@ -70,13 +68,14 @@
 </div>
 
 <div id="Account" class="tabcontent">
-Change password<br>
- <form name="changepassword" onsubmit="return changePassword()" method="post">
- New password: <input type="password" required name="newpassword"><br>
- Old password: <input type="password" required name="oldpassword"><br>
- <input type="submit" value="Change password">
- </form>
- 
+<fieldset class="signin">
+	<legend><b>Change password</b></legend>
+	<form name="changepassword" onsubmit="return changePassword()" method="post">
+		<label>New PSW:</label><input type="password" required name="newpassword"><br>
+		<label>Old PSW:</label><input type="password" required name="oldpassword"><br>
+		<input type="submit" value="Change password">
+	</form>
+ </fieldset>
 <button onclick="signout()">Sign out</button>
 </div>
 
