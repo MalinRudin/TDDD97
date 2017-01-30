@@ -42,12 +42,13 @@ function validateSingupForm() {
 	formData.city = document.forms["signup"]["city"].value;
 	formData.country = document.forms["signup"]["country"].value;
 	
-	//console.log(typeof formData.email);
-	
 	var serverRespons = serverstub.signUp(formData);
 	
 	if(serverRespons["success"]){
 		successMSG(serverRespons["message"]);
+		var serverRespons2 = serverstub.signIn(formData.email, formData.password);
+		localStorage.setItem("token", serverRespons2["data"]);
+		displayView();
 	}else{
 		errorMSG(serverRespons["message"]);
 	}

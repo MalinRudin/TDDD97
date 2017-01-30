@@ -6,66 +6,70 @@ div#main{
 
 div.headdiv{
 	margin: auto;
-	width: 600px;
 	height: 400px;
-	margin-top: 100px;
 }
 
 div.welcomeimage{
+	background-image: url("wimage.png");
+	border-radius: 15px;
 	float: left;
 	width: 336px;
-	height: 396px;
+	height: 400px;
 	margin-right: 10px;
-	border: 2px solid;
-}
-
-div.welcomeimage img{
-	width: 336px;
-	height: 396px;
+	border: 1px solid;
 }
 
 div.rightcolumn{
 	height: 400px;
+	width: 250px;
+	float: right;
 }
 
-div.signin{
-	border: 2px solid;
-	float: right;
-	width: 246px;
-	height: 100px;
+fieldset{
+	border-radius: 15px;
+	padding: 10px;
+	border: 1px solid;
+	width: auto;
+}
+.signin{
+	height: 80px;
 	margin-bottom: 10px;
-
 }
 
-div.signup{
-	border: 2px solid;
-	float: right;
-	width: 246px;
-	height: 282px;
+.signup{
+	height: 268px;
+}
+
+label{
+	display: inline-block;
+    width: 90px;
+    text-align: right;
+	margin-right: 4px;
 }
 
 div.headdiv input, select{
-	float:right;
+	width: 125px;
 }
 
 div.headdiv form{
-	padding: 5px;
 	margin-bottom: 0px;
 	
 }
 
-#errorMSG {
+#errorMSG,  #successMSG{
 	margin: auto;
 	width: 600px;
 	text-align: center;
-	background-color: red;
+	border-radius: 1em;
+	
+}
+#errorMSG{
+	background-color: #ed5757;
+	margin-top: 100px;
 }
 
 #successMSG {
-	margin: auto;
-	width: 600px;
-	text-align: center;
-	background-color: green;
+	background-color: #57ed70;
 }
 
 .tabcontent{
@@ -74,10 +78,14 @@ div.headdiv form{
 
 ul.tab {
     list-style-type: none;
-	border: 1px solid #ccc;
+	border: 1px solid;
+	border-radius: 5px;
 	overflow: hidden;
 }
 
+ul.tab .active {
+	background-color: #ccc;
+}
 ul.tab li {float: left;}
 
 ul.tab li a {
@@ -91,3 +99,29 @@ ul.tab li a {
 	
 }
 
+.postmsg{
+	margin-top: 10px;
+	padding: 10px;
+	border-radius: 5px;
+	border: 1px solid;
+	width: auto;
+}
+
+textarea{
+	width: 300px;
+	height: 50px;
+	border-radius: 5px;
+	border: 1px solid;
+}
+
+.profileInfo{
+	margin-top: 10px;
+}
+
+.profilePost{
+	margin-top: 10px;
+}
+
+.profileWall{
+	margin-top: 10px;
+}
