@@ -7,8 +7,8 @@ displayView = function(){
 		var serverRespons=serverstub.getUserDataByToken(localStorage.getItem("token"));
 		document.getElementById("info").innerHTML=viewProfileInfo(serverRespons.data);
 		localStorage.setItem("email", serverRespons.data.email);
-		document.getElementById("post").innerHTML=viewProfilePost();
-		document.getElementById("wall").innerHTML=viewProfileWall();
+		document.getElementById("post").innerHTML=viewProfilePost(1);
+		viewProfileWall();
 		document.getElementById("Home").style.display = "block";
 	}
  
@@ -114,6 +114,11 @@ function changePassword() {
  	var oldpsw = document.forms["changepassword"]["oldpassword"].value;
  	
  	var serverRespons = serverstub.changePassword(localStorage.getItem("token"), oldpsw, newpsw);
+	if(serverRespons["success"]){
+		successMSG(serverRespons["message"]);
+	}else{
+		errorMSG(serverRespons["message"]);
+	}
 	return false;
 }
 
@@ -124,7 +129,6 @@ function signout(){
 		localStorage.clear();
 		successMSG(serverRespons["message"]);
 	}else{
-		//localStorage.clear();
 		errorMSG(serverRespons["message"]);
 	}
 	displayView();
@@ -142,17 +146,16 @@ function viewProfileInfo(data) {
 	return text;
 }
 
-function viewProfilePost() {
-	var text = "<textarea id='message'></textarea><br>" + 
-			   "<button onclick='savePost()'>Post message</button>";
+function viewProfilePost(id) {
+	var text = "<textarea id='message"+id+"'></textarea><br>" + 
+			   "<button onclick='savePost("+id+")'>Post message</button>";
 	return text;
 }
 
-function savePost() {
-	var serverRespons=serverstub.postMessage(localStorage.getItem("token"), document.getElementById("message").value, localStorage.getItem("email"));
-	document.getElementById("message").value="";
-	//returnerar en text med meddelandena...
-	viewProfileWall();
+function savePost(id) {
+	var serverRespons=serverstub.postMessage(localStorage.getItem("token"), document.getElementById("message"+id).value, localStorage.getItem("email"));
+	document.getElementById("message"+id).value="";
+	//viewProfileWall();
 }
 
 function viewProfileWall() {
@@ -161,7 +164,14 @@ function viewProfileWall() {
 	serverRespons.data.forEach(function(msg){
 		text += "<div class='postmsg'>" + msg.writer +": " + msg.content + "</div>";
 	});
-	return text;
+	
+	if(document.getElementById("homelink").className.indexOf("active")!=-1){
+		document.getElementById("wall").innerHTML=text;
+	}else{
+		document.getElementById("browseWall").innerHTML=text;
+	}
+	
+	
 }
 
 function errorMSG(message){
@@ -181,8 +191,8 @@ function search() {
 		localStorage.setItem("email", user);
 	
 		document.getElementById("browseInfo").innerHTML = viewProfileInfo(serverRespons.data);
-		document.getElementById("browsePost").innerHTML = viewProfilePost();
-		document.getElementById("browseWall").innerHTML = viewProfileWall();
+		document.getElementById("browsePost").innerHTML = viewProfilePost(2);
+		viewProfileWall();
 	}else{
 		errorMSG(serverRespons["message"]);
 	}
