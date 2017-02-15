@@ -16,3 +16,9 @@ create table messages (
   touser text,
   message text
 );
+
+drop table if exists online_users;
+create table online_users (
+  email text,
+  token text
+);
