@@ -1,4 +1,5 @@
 from flask import request, Flask
+import json
 app = Flask(__name__)
 import database_helper
 
@@ -10,9 +11,16 @@ def index():
 @app.route('/sign_in', methods=['POST'])
 # (email, password)
 def sign_in():
-    test=request.form['test']
-    name = request.form['name']
-    return test+name
+    email=request.form['email']
+    #password = request.form['password']
+    return str(database_helper.debug())
+
+    #if success:
+     #   data = [{'success': True, 'message': "Successfully signed in.", "data": token}]
+      #  return json.dumps(data)
+    #else:
+     #   data = [{"success": False, "message": "Wrong username or password.", "data": token}]
+      #  return json.dumps(data)
 
 @app.route('/sign_up', methods=['POST'])
 #sign_up(email, password, firstname, familyname, gender, city, country)
@@ -24,8 +32,13 @@ def sign_up():
     gender = request.form['gender']
     city = request.form['city']
     country = request.form['country']
-    database_helper.add_user(email, password, firstname, familyname, gender, city, country)
-    return 'Kankse gick bra!'
+
+    if database_helper.add_user(email, password, firstname, familyname, gender, city, country):
+        data=[{'success': True, 'message': 'Successfully created a new user.'}]
+        return json.dumps(data)
+    else:
+        data = [{'success': False, 'message': 'Error, no user created.'}]
+        return json.dumps(data)
 
 @app.route('/sign_out', methods=['POST'])
 #sign_out(token)
