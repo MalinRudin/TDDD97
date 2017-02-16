@@ -29,6 +29,15 @@ def sign_up():
     gender = request.form['gender']
     city = request.form['city']
     country = request.form['country']
+    if email.find('@')==-1:
+        data = [{'success': False, 'message': 'Error, invalid email.'}]
+        return json.dumps(data)
+    if len(password)<6:
+        data = [{'success': False, 'message': 'Error, password to short.'}]
+        return json.dumps(data)
+    if len(email)<1 or len(password)<1 or len(firstname)<1 or len(familyname)<1 or len(gender)<1 or len(city)<1 or len(country)<1:
+        data = [{'success': False, 'message': 'Error, invalid data.'}]
+        return json.dumps(data)
 
     if database_helper.add_user(email, password, firstname, familyname, gender, city, country):
         data=[{'success': True, 'message': 'Successfully created a new user.'}]
@@ -51,12 +60,14 @@ def sign_out():
 @app.route('/change_password', methods=['POST'])
 #change_password(token, old_password, new_password)
 def change_password():
-    email = request.form['email']
     token = request.form['token']
     oldpassword = request.form['oldpassword']
     newpassword = request.form['newpassword']
+    if len(newpassword)<6:
+        data = [{'success': False, 'message': 'Error, password to short.'}]
+        return json.dumps(data)
     if database_helper.is_signed_in(token):
-        [success, message]=database_helper.change_password(email, oldpassword, newpassword)
+        [success, message]=database_helper.change_password(token, oldpassword, newpassword)
         data = [{'success': success, 'message': message}]
         return json.dumps(data)
     else:

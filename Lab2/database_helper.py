@@ -88,10 +88,13 @@ def is_signed_in(token):
     except:
         return False
 
-def change_password(email, oldpassword, newpassword):
+def change_password(token, oldpassword, newpassword):
     try:
         c=get_db()
         cur = c.cursor()
+        cur.execute("SELECT * FROM online_users WHERE token=?", (token,))
+        email = cur.fetchone()[0]
+
         cur.execute("SELECT * FROM users WHERE email=? AND password=?", (email, oldpassword))
         if cur.fetchone():
             c.execute("UPDATE users SET password=? WHERE email=?", (newpassword, email))
