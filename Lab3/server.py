@@ -1,11 +1,42 @@
+from geventwebsocket.handler import WebSocketHandler
+from geventwebsocket import WebSocketError
+from gevent.pywsgi import WSGIServer
 from flask import request, Flask
+
 import json
 app = Flask(__name__)
 import database_helper
 
+# online_users[0]=websocket conection, online_users[1]=emailadress
+online_users=[]
+
 @app.route('/')
 def index():
     return app.send_static_file('client.html')
+
+@app.route('/socket')
+def socket():
+    if request.environ.get('wsgi.websocket'):
+        ws = request.environ['wsgi.websocket']
+        while True:
+            try:
+                data = ws.receive()
+                if data == "close connection":
+                    for user in online_users:  # loop throw all online users
+                        if user[0] == ws:  # The connection match
+                            online_users.remove(user)  # remove this one
+                            break  # Stop while loop
+
+                if data is not None: #then it's a token
+                    user = database_helper.get_user_by_token(data)
+                    if user is not False:
+                        online_users.append([ws, user[0]])
+
+            except WebSocketError as e:
+                print(str(e))
+                break  # Stop while loop
+
+        return ""  #
 
 
 @app.route('/sign_in', methods=['POST'])
@@ -14,8 +45,13 @@ def sign_in():
     email=request.form['email']
     password = request.form['password']
     [success, message, token]=(database_helper.sign_in(email, password))
-    database_helper.add_token(email, token)
+    for user in online_users:
+        if user[1]==email: #loged in on other computer
+            user[0].send('signout')  # Send logout message
+            online_users.remove(user)
 
+
+    database_helper.add_token(email, token)
     data = {'success': success, 'message': message, "data": token}
     return json.dumps(data)
 
@@ -50,7 +86,15 @@ def sign_up():
 #sign_out(token)
 def sign_out():
     token= request.form['token']
+    userdata = database_helper.get_user_by_token(token)
+    if userdata is not False:
+        for user in online_users:  # loop through online_users
+            if user[1] == userdata[0]:  # userdata[0]=email
+                 #user[0].send("close")
+                 #user[0].close()  # close connection
+                online_users.remove(user) # remove users were email match
     if database_helper.sign_out(token):
+
         data = {'success': True, 'message': 'Successfully signed out.'}
         return json.dumps(data)
     else:
@@ -172,4 +216,5 @@ def post_message():
         return json.dumps(data)
 
 if __name__ == '__main__':
-    app.run()
+    http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
+    http_server.serve_forever()
