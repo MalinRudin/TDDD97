@@ -8,7 +8,7 @@ app = Flask(__name__)
 import database_helper
 
 # online_users[0]=websocket conection, online_users[1]=emailadress
-online_users=[]
+online_users={}
 
 @app.route('/')
 def index():
@@ -20,17 +20,18 @@ def socket():
         ws = request.environ['wsgi.websocket']
         while True:
             try:
-                data = ws.receive()
-                if data == "close connection":
-                    for user in online_users:  # loop throw all online users
-                        if user[0] == ws:  # The connection match
-                            online_users.remove(user)  # remove this one
-                            break  # Stop while loop
-
-                if data is not None: #then it's a token
-                    user = database_helper.get_user_by_token(data)
+                data = json.loads(ws.receive())
+                if data["message"] == "close connection":
+                    user=database_helper.get_user_by_token(data["token"])
                     if user is not False:
-                        online_users.append([ws, user[0]])
+                        if online_users.get(user[0]):
+                            del online_users[user[0]]
+                    break  # Stop while loop
+
+                if data["message"] == "signin":
+                    user = database_helper.get_user_by_token(data["token"])
+                    if user is not False:
+                        online_users[user[0]]=ws
 
             except WebSocketError as e:
                 print(str(e))
@@ -45,10 +46,13 @@ def sign_in():
     email=request.form['email']
     password = request.form['password']
     [success, message, token]=(database_helper.sign_in(email, password))
-    for user in online_users:
+    if success:
+        if online_users.get(email):
+            online_users[email].send("signout")
+    '''for user in online_users:
         if user[1]==email: #loged in on other computer
             user[0].send('signout')  # Send logout message
-            online_users.remove(user)
+            online_users.remove(user)'''
 
 
     database_helper.add_token(email, token)
@@ -88,11 +92,8 @@ def sign_out():
     token= request.form['token']
     userdata = database_helper.get_user_by_token(token)
     if userdata is not False:
-        for user in online_users:  # loop through online_users
-            if user[1] == userdata[0]:  # userdata[0]=email
-                 #user[0].send("close")
-                 #user[0].close()  # close connection
-                online_users.remove(user) # remove users were email match
+        if online_users.get(userdata[0]):
+            del online_users[userdata[0]]
     if database_helper.sign_out(token):
 
         data = {'success': True, 'message': 'Successfully signed out.'}
