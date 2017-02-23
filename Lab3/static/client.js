@@ -1,29 +1,29 @@
 var socket = new WebSocket("ws://" + window.location.host + "/socket");
 
 socket.onopen = function() {
-    //console.log("socket open");
-    if (localStorage.getItem("token") !== null) {
-        socket.send(localStorage.getItem("token"));
+    if (localStorage.getItem("token") !== null) { //if you are logged in
+        socket.send('{"token":"'+ localStorage.getItem("token")+'", "message": "signin"}');
     }
 };
 
  socket.onmessage = function(event) {
-     //console.log(event.data)
      if (event.data == 'signout') {
          signout();
      }
-     if (event.data == 'close') {
-         signout();
-     }
-
  };
 
+ socket.onerror=function (event) {
+     console.log(event.data);
+ }
+
 socket.onclose = function(){
-    signout();
+     location.reload(); //if server goes down. Reload and create a new connection.
 };
 
-window.onbeforeunload = function() {
-      socket.send("close connection");
+window.onbeforeunload = function(){
+    if (socket.readyState == 1) { //if the connection is connected
+        socket.send('{"token":"' + localStorage.getItem("token") + '", "message": "close connection"}');
+    }
 };
 
 displayView = function(){
@@ -123,7 +123,7 @@ function signin(email, password){
             var serverRespons = JSON.parse(this.responseText);
             if (serverRespons.success) {
                 localStorage.setItem("token", serverRespons.data);
-                socket.send(localStorage.getItem("token"));
+                socket.send('{"token":"'+ localStorage.getItem("token")+'", "message": "signin"}');
                 successMSG(serverRespons.message);
             }else{
                 errorMSG(serverRespons.message);
