@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+ <head>
+     <title>TDDD97</title>
+     <meta charset="UTF-8">
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.bundle.js" text="text/javascript"></script>
+     <script src="static/livedata.js" type="text/javascript"></script>
+     <link href="static/client.css" type="text/css" rel="stylesheet">
+     <script src="static/client.js" type="text/javascript"></script>
+     <script src="static/server.js" type="text/javascript"></script>
+
+
+ </head>
+ <body>
+ <script type="text/view" id="welcomeview">
+ <div class="headdiv">
+
+	<div class="welcomeimage"></div>
+
+	<div class="rightcolumn">
+		<fieldset class="signin">
+			<legend><b>Sign in</b></legend>
+			<form name="signin" onsubmit="return validateSigninForm()" method="post">
+				<label>Email:</label><input type="email" required name="email"><br>
+				<label>Password:</label><input type="password" required name="password"><br>
+				<input type="submit" value="Sign in">
+			</form>
+		</fieldset>
+
+		<fieldset class="signup">
+			<legend><b>Sign up</b></legend>
+			<form name="signup" onsubmit="return validateSingupForm()" method="post">
+				<label>Email:</label><input type="email" required name="email"><br>
+				<label>Password:</label><input type="password" required name="password"><br>
+				<label>Repeat psw:</label><input type="password" required name="password2"><br>
+				<label>First name:</label><input type="text" required name="firstname"><br>
+				<label>Family name:</label><input type="text" required name="familyname"><br>
+				<label>Birth gender:</label><select name="gender" required>
+										<option value=""></option>
+										<option value="Female">Female</option>
+										<option value="Male">Male</option>
+								   </select><br>
+				<label>City:</label><input type="text" required name="city"><br>
+				<label>Country:</label><input type="text" required name="country"><br>
+	
+				<input type="submit" value="Sign up">
+			</form>
+		</fieldset>
+	</div>
+</div>
+</script>
+
+<script type="text/view" id="profileview">
+<ul class="tab">
+	<li><a href="javascript:void(0)" id="homelink" class="tablinks active" onclick="openTab(event, 'Home')">Home</a></li>
+	<li><a href="javascript:void(0)" id="browserlink" class="tablinks" onclick="openTab(event, 'Browse')">Browse</a></li>
+	<li><a href="javascript:void(0)" id="accountlink" class="tablinks" onclick="openTab(event, 'Account')">Account</a></li>
+	<li><a href="javascript:void(0)" id="statisticslink" class="tablinks" onclick="openTab(event, 'Statics')">Statics</a></li>
+</ul>
+
+<div id="Home" class="tabcontent">
+	<div id="info" class="profileInfo"></div>
+	<div id="post" class="profilePost"></div>
+	<button onclick="viewProfileWall()">Uppdate wall</button>
+	<div id="wall" class="profileWall"></div>
+</div>
+
+<div id="Browse" class="tabcontent">
+	<input type="text" id="search">
+	<button onclick="search()">Search user</button>
+	<div id="browseInfo" class="profileInfo"></div>
+	<div id="browsePost" class="profilePost"></div>
+	<button onclick="viewProfileWall()">Uppdate wall</button>
+	<div id="browseWall" class="profileWall"></div>
+</div>
+
+<div id="Account" class="tabcontent">
+<fieldset class="signin">
+	<legend><b>Change password</b></legend>
+	<form name="changepassword" onsubmit="return changePassword()" method="post">
+		<label>New PSW:</label><input type="password" required name="newpassword"><br>
+		<label>Old PSW:</label><input type="password" required name="oldpassword"><br>
+		<input type="submit" value="Change password">
+	</form>
+ </fieldset>
+<button onclick="signout()">Sign out</button>
+</div>
+<div id="Statics" class="tabcontent">
+    <center><h1>Online users</h1></center>
+    <canvas id="OnlineUsersChart" width="400" height="400"></canvas>
+    <center><h1>Messages</h1></center>
+    <canvas id="MessagesChart" width="400" height="200"></canvas>
+    <center><h1>Users cities</h1></center>
+    <canvas id="CityChart" width="400" height="200"></canvas>
+</div>
+
+</script>
+<div id="errorMSG"></div>
+<div id="successMSG"></div>
+<div id="main"></div>
+
+ </body>
+</html>

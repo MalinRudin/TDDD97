@@ -1,0 +1,25 @@
+--Initialize by front end SQLite browser
+drop table if exists users;
+create table users (
+  email text PRIMARY key,
+  password text,
+  firstname text,
+  familyname text,
+  gender text,
+  city text,
+  country text
+);
+
+drop table if exists messages;
+create table messages (
+  fromuser text,
+  touser text,
+  message text,
+  time text
+);
+
+drop table if exists online_users;
+create table online_users (
+  email text,
+  token text
+);
