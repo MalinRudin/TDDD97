@@ -268,3 +268,23 @@ def livecity():
 if __name__ == '__main__':
     http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
     http_server.serve_forever()
+
+# Divide reveived data by given keys and return original data
+def decrypt_data(data):
+    token = data["id"]
+    hash = data["hash"]
+    org_data = data["data"]
+
+    if validate_token(hash, token, data):
+        return org_data
+    else:
+        # !!! not trusted user! Should return something else here...
+        return org_data
+
+# Validate that token from sender equals token in database
+def validate_token(hash, token, data):
+    # use token to look up key
+    # use data and key to create new hash
+    # compare new hash with received hash, return true if match, false if not
+
+    return True
