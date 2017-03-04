@@ -198,7 +198,10 @@ def earliest_date():
         cur = c.cursor()
         cur.execute("SELECT MIN(time) FROM messages")
         time=cur.fetchone()
-        return time
+        if time[0] == None:
+            return "9999-01-01 00:00:00.000000"
+        else:
+            return time
     except:
         return False
 
@@ -208,7 +211,10 @@ def newest_date():
         cur = c.cursor()
         cur.execute("SELECT MAX(time) FROM messages")
         time=cur.fetchone()
-        return time
+        if time[0] == None:
+            return "9999-01-01 00:00:00.000000"
+        else:
+            return time
     except:
         return False
 
