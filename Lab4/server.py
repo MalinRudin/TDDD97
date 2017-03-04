@@ -12,6 +12,10 @@ import database_helper
 online_users={}
 
 @app.route('/')
+@app.route('/home')
+@app.route('/browse')
+@app.route('/account')
+@app.route('/statistics')
 def index():
     return app.send_static_file('client.html')
 

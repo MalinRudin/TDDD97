@@ -1,5 +1,79 @@
 var socket = new WebSocket("ws://" + window.location.host + "/socket");
 
+$(".tablinks").on('click', function(e){
+   e.preventDefault();
+   page($(this).data('target'));
+});
+
+page('/', start);
+page('/home', home);
+page('/browse', browse);
+page('/account', account);
+page('/statistics', statistics);
+page();
+
+function start() {
+    displayView();
+}
+
+function home() {
+    $( ".tabcontent" ).each(function() {
+            $(this).hide();
+    });
+    displayView();
+}
+
+function browse() {
+    if(localStorage.getItem("token") === null) {
+		$("#welcomeview").show();
+		$("#profileview").hide();
+	}else {
+        $("#welcomeview").hide();
+        $("#profileview").show();
+
+        $( ".tabcontent" ).each(function() {
+            $(this).hide();
+        });
+
+        $('#Browse').show();
+    }
+}
+
+
+function account() {
+    if(localStorage.getItem("token") === null) {
+		$("#welcomeview").show();
+		$("#profileview").hide();
+	}else {
+        $("#welcomeview").hide();
+        $("#profileview").show();
+
+        $( ".tabcontent" ).each(function() {
+            $(this).hide();
+        });
+        $('#Account').show();
+    }
+}
+
+
+function statistics() {
+    if(localStorage.getItem("token") === null) {
+		$("#welcomeview").show();
+		$("#profileview").hide();
+	}else {
+        $("#welcomeview").hide();
+        $("#profileview").show();
+
+        $( ".tabcontent" ).each(function() {
+            $(this).hide();
+        });
+
+        $('#Statistics').show();
+        liveuser();
+        livemessage();
+        livecity();
+    }
+}
 socket.onopen = function() {
     if (localStorage.getItem("token") !== null) { //if you are logged in
         socket.send('{"token":"'+ localStorage.getItem("token")+'", "message": "signin"}');
@@ -25,17 +99,13 @@ socket.onopen = function() {
      console.log(event.data);
  }
 
-socket.onclose = function(){
-     location.reload(); //if server goes down. Reload and create a new connection.
-};
-
 window.onbeforeunload = function(){
     if (socket.readyState == 1) { //if the connection is connected
         socket.send('{"token":"' + localStorage.getItem("token") + '", "message": "close connection"}');
     }
 };
 
-displayView = function(){
+function displayView(){
 	// the code required to display a view
 	if(localStorage.getItem("token") === null) {
 		$("#welcomeview").show();
@@ -60,13 +130,6 @@ displayView = function(){
         };
 	}
  
-};
-window.onload = function(){
- //code that is executed as the page is loaded.
- //You shall put your own custom code here.
- //window.alert() is not allowed to be used in your implementation.
-displayView();
-
 };
 
 function validateSingupForm() {
@@ -139,7 +202,7 @@ function signin(email, password){
             }else{
                 errorMSG(serverRespons.message);
             }
-            displayView();
+            page('/home');
         }
     };
 }
@@ -156,6 +219,8 @@ function numberOfCharacters(psw) {
 }
 
 function openTab(evt, tabName) {
+    //evt.preventDefault();
+    //page('/' + tabName);
 	var i, tabcontent, tablinks;
 	
 	$('#errorMSG').collapse('hide');
@@ -178,7 +243,7 @@ function openTab(evt, tabName) {
     // open the one intended.
     $('#'+tabName).show();
 
-    if (tabName == "Statics"){
+    if (tabName == "Statistics"){
         liveuser();
         livemessage();
         livecity();
@@ -221,7 +286,7 @@ function signout(){
 
 		        errorMSG(serverRespons.message);
             }
-            displayView();
+            page('/');
         }
     };
 
@@ -310,7 +375,8 @@ function successMSG(message){
 	$("#successMSG").collapse('show');
 }
 
-searchuser=function () {
+$('#searchform').on('submit', function(e){
+    e.preventDefault();
 	var user = document.getElementById("search").value;
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_data_by_email", true);
@@ -330,6 +396,6 @@ searchuser=function () {
         }
     };
     return false;
-}
+});
 
 
