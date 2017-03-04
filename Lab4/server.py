@@ -11,6 +11,10 @@ import database_helper
 #  Dict for handling online users
 online_users={}
 
+@app.route('/home')
+@app.route('/browse')
+@app.route('/account')
+@app.route('/statistics')
 @app.route('/')
 def index():
     return app.send_static_file('client.html')
