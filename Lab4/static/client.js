@@ -38,9 +38,11 @@ window.onbeforeunload = function(){
 displayView = function(){
 	// the code required to display a view
 	if(localStorage.getItem("token") === null) {
-		document.getElementById("main").innerHTML=document.getElementById("welcomeview").innerHTML;
+		$("#welcomeview").show();
+		$("#profileview").hide();
 	}else{
-		document.getElementById("main").innerHTML=document.getElementById("profileview").innerHTML;
+		$("#welcomeview").hide();
+		$("#profileview").show();
 
 		var xhttp = new XMLHttpRequest();
         xhttp.open("POST", "/get_user_data_by_token", true);
@@ -156,7 +158,8 @@ function numberOfCharacters(psw) {
 function openTab(evt, tabName) {
 	var i, tabcontent, tablinks;
 	
-	errorMSG("");
+	$('#errorMSG').collapse('hide');
+	$('#successMSG').collapse('hide');
 
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_data_by_token", true);
@@ -168,19 +171,13 @@ function openTab(evt, tabName) {
             localStorage.setItem("email", serverRespons.data.email);
         }
     };
+    // close all tabs
+    $( ".tabcontent" ).each(function() {
+        $(this).hide();
+    });
+    // open the one intended.
+    $('#'+tabName).show();
 
-	tabcontent=document.getElementsByClassName("tabcontent");
-	for(i=0; i<tabcontent.length; i++){
-		tabcontent[i].style.display="none";
-	}
-	
-	tablinks = document.getElementsByClassName("tablinks");
-	for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
-	document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
     if (tabName == "Statics"){
         liveuser();
         livemessage();
@@ -244,8 +241,8 @@ function viewProfileInfo(data) {
 }
 
 function viewProfilePost(id) {
-	var text = "<textarea id='message"+id+"'></textarea><br>" + 
-			   "<button onclick='savePost("+id+")'>Post message</button>";
+	var text = "<textarea class='form-control' id='message"+id+"'></textarea>" +
+			   "<button class='btn btn-primary' onclick='savePost("+id+")'>Post message</button>";
 	return text;
 }
 
@@ -279,15 +276,15 @@ function viewProfileWall() {
             if (serverRespons.success) {
                 var text = "";
                 serverRespons.data.forEach(function (msg) {
-                    text += "<div class='postmsg'>" + msg[0] + ": " + msg[2] + "</div>";
+                    text += '<div class="panel panel-default"><div class="panel-body">' + msg[0] + ': ' + msg[2] + '</div></div>';
                 });
-                if (document.getElementById("homelink").className.indexOf("active") != -1) {
+                if ($("#Home").is(":visible")) {
                     document.getElementById("wall").innerHTML = text;
                 } else {
                     document.getElementById("browseWall").innerHTML = text;
                 }
             }else{
-                if (document.getElementById("homelink").className.indexOf("active") != -1) {
+                if ($("#Home").is(":visible")) {
                     document.getElementById("wall").innerHTML = "";
                 } else {
                     document.getElementById("browseWall").innerHTML = "";
@@ -302,16 +299,18 @@ function viewProfileWall() {
 }
 
 function errorMSG(message){
-	document.getElementById("errorMSG").innerHTML=message;
-	document.getElementById("successMSG").innerHTML="";
+    $("#errorMSG").html(message);
+    $("#errorMSG").collapse('show');
+	$("#successMSG").collapse('hide');
 }
 
 function successMSG(message){
-	document.getElementById("errorMSG").innerHTML="";
-	document.getElementById("successMSG").innerHTML=message;
+    $("#successMSG").html(message);
+    $("#errorMSG").collapse('hide');
+	$("#successMSG").collapse('show');
 }
 
-function search() {
+searchuser=function () {
 	var user = document.getElementById("search").value;
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_data_by_email", true);

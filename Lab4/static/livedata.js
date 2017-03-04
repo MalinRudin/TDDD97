@@ -5,6 +5,10 @@ var cityChart=null;
 var randomColorGenerator = function () {
     return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
 };
+var randomcolors=[];
+for (i = 0; i < 5; i++) {
+    randomcolors.push(randomColorGenerator());
+}
 
 liveuser = function() {
     var xhttp = new XMLHttpRequest();
@@ -27,9 +31,9 @@ liveuser = function() {
                     {
                         data: onlineUsers,
                         backgroundColor: [
-                            randomColorGenerator(),
-                            randomColorGenerator(),
-                            randomColorGenerator()
+                            randomcolors[0],
+                            randomcolors[1],
+                            randomcolors[2]
                         ]
                     }]
                 };
@@ -40,6 +44,7 @@ liveuser = function() {
                     type: 'doughnut',
                     data: data,
                     options: {
+                        responsive: true,
                         animation:{
                             animateScale:true
                         }
@@ -66,7 +71,7 @@ livemessage = function () {
                     label: 'Message posted',
                     data: serverRespons[0],
                     lineTension: 0.1,
-                    backgroundColor: randomColorGenerator()
+                    backgroundColor: randomcolors[3]
                 }]
             };
             if(messageChart !=null){
@@ -74,10 +79,18 @@ livemessage = function () {
             }
 
             messageChart= new Chart(ctx, {
-                responsive: false,
-                maintainAspectRatio: false,
                 type: 'line',
                 data: data,
+                options:{
+                    responsive: true,
+                    scales: {
+                        yAxes:[{
+                            ticks:{
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
 
             });
 
@@ -106,7 +119,7 @@ livecity = function () {
                 labels: cities,
                 datasets: [{
                     label: "User cities",
-                    backgroundColor:  randomColorGenerator(),
+                    backgroundColor:  randomcolors[4],
                     data: NumberOfUsers,
                 }]
             };
@@ -115,11 +128,10 @@ livecity = function () {
             }
 
             cityChart= new Chart(ctx, {
-                responsive: false,
-                maintainAspectRatio: false,
                 type: 'bar',
                 data: data,
                 options: {
+                    responsive: true,
                     scales: {
                         yAxes: [{
                             ticks: {
