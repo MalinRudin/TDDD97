@@ -3,6 +3,11 @@ from flask import g
 import string
 import random
 import datetime
+from os import urandom
+from flask_bcrypt import Bcrypt
+from server import app
+
+bcrypt = Bcrypt(app)
 
 def connect_db():
     return sqlite3.connect("database.db")
@@ -13,11 +18,18 @@ def get_db():
         db = g.db = connect_db()
     return db
 
+# Add a new user to database
 def add_user(email, password, firstname, familyname, gender, city, country):
     if not(get_user_by_email(email)):
         try:
+            # Create a hashed version of password for storage
+            password_hash = bcrypt.generate_password_hash(password)
+
+            # Store user information in database
             c = get_db()
-            c.execute("INSERT INTO users (email, password, firstname, familyname, gender, city, country) VALUES (?,?,?,?,?,?,?)", (email, password, firstname, familyname, gender, city, country))
+            c.execute(
+                "INSERT INTO users (email, password, firstname, familyname, gender, city, country) VALUES (?,?,?,?,?,?,?)",
+                (email, password_hash, firstname, familyname, gender, city, country))
             c.commit()
             return True
         except:
@@ -40,14 +52,24 @@ def get_user_by_token(token):
     except:
         return False
 
-
+# Sign in user
 def sign_in(email, password):
+    # Retrieve user from database based on username email (is assumed to be unique)
     try:
         c = get_db().cursor()
-        c.execute("SELECT * FROM users WHERE email=? AND password=?", (email, password))
-        token=token_generator()
-        if c.fetchone():
-            return [True, "Successfully signed in.", token]
+        c.execute("SELECT * FROM users WHERE email=?", (email,))
+        user_info = c.fetchone()
+
+        # Make sure user exists in database
+        if user_info:
+            # Fetch the stored hashed password
+            password_hash = user_info[1]
+
+            # Compare hashed password stored in database with given password
+            if bcrypt.check_password_hash(password_hash, password):
+                return [True, "Successfully signed in.", token_generator()]
+            else:
+                return [False, "Wrong username or password.", ""]
         else:
             return [False, "Wrong username or password.", ""]
     except:
@@ -89,18 +111,31 @@ def is_signed_in(token):
     except:
         return False
 
+# Change password for signed in user
 def change_password(token, oldpassword, newpassword):
     try:
         c=get_db()
         cur = c.cursor()
+        # Fetch email from database using token
         cur.execute("SELECT * FROM online_users WHERE token=?", (token,))
         email = cur.fetchone()[0]
 
-        cur.execute("SELECT * FROM users WHERE email=? AND password=?", (email, oldpassword))
-        if cur.fetchone():
-            c.execute("UPDATE users SET password=? WHERE email=?", (newpassword, email))
-            c.commit()
-            return [True, "Password changed."]
+        # Fetch user information from database
+        cur.execute("SELECT * FROM users WHERE email=?", (email,))
+        user_info = cur.fetchone()
+        # Make sure user exists
+        if user_info:
+            # Check that old password is correct
+            if bcrypt.check_password_hash(user_info[1], oldpassword):
+                # Create a hashed version of new password
+                newpassword_hash = bcrypt.generate_password_hash(newpassword)
+
+                # Store new hashed password in database
+                c.execute("UPDATE users SET password=? WHERE email=?", (newpassword_hash, email))
+                c.commit()
+                return [True, "Password changed."]
+            else:
+                return [False, "Wrong username or password."]
         else:
             return [False, "Wrong username or password."]
     except:

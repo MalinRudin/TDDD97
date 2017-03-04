@@ -329,6 +329,7 @@ searchuser=function () {
             }
         }
     };
+    return false;
 }
 
 
