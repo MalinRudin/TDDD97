@@ -21,5 +21,6 @@ create table messages (
 drop table if exists online_users;
 create table online_users (
   email text,
-  token text
+  token text,
+  key text
 );
