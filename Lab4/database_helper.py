@@ -3,7 +3,9 @@ from flask import g
 import string
 import random
 import datetime
-from os import urandom
+import hashlib
+import json
+
 from flask_bcrypt import Bcrypt
 from server import app
 
@@ -27,9 +29,7 @@ def add_user(email, password, firstname, familyname, gender, city, country):
 
             # Store user information in database
             c = get_db()
-            c.execute(
-                "INSERT INTO users (email, password, firstname, familyname, gender, city, country) VALUES (?,?,?,?,?,?,?)",
-                (email, password_hash, firstname, familyname, gender, city, country))
+            c.execute("INSERT INTO users (email, password, firstname, familyname, gender, city, country) VALUES (?,?,?,?,?,?,?)", (email, password_hash, firstname, familyname, gender, city, country))
             c.commit()
             return True
         except:
@@ -52,10 +52,19 @@ def get_user_by_token(token):
     except:
         return False
 
+def get_key_by_token(token):
+    try:
+        c = get_db().cursor()
+        c.execute("SELECT * FROM online_users WHERE token=?", (token,))
+        key = c.fetchone()[2]
+        return key
+    except:
+        return False
+
 # Sign in user
 def sign_in(email, password):
-    # Retrieve user from database based on username email (is assumed to be unique)
     try:
+        # Retrieve user from database based on username email (is assumed to be unique)
         c = get_db().cursor()
         c.execute("SELECT * FROM users WHERE email=?", (email,))
         user_info = c.fetchone()
@@ -67,24 +76,27 @@ def sign_in(email, password):
 
             # Compare hashed password stored in database with given password
             if bcrypt.check_password_hash(password_hash, password):
-                return [True, "Successfully signed in.", token_generator()]
+                # Return token and key
+                return [True, "Successfully signed in.", [token_generator(), token_generator()]]
             else:
                 return [False, "Wrong username or password.", ""]
+
         else:
             return [False, "Wrong username or password.", ""]
     except:
         return [False, "Error", ""]
 
-def add_token(email, token):
+def add_token(email, data):
     try:
         c = get_db()
         cur = c.cursor()
         cur.execute("SELECT * FROM online_users WHERE email=?", (email,))
+
         if cur.fetchone():
-            c.execute("UPDATE online_users SET token=? WHERE email=?", (token, email))
+            c.execute("UPDATE online_users SET token=?, key=? WHERE email=?", (data[0], data[1], email))
             c.commit()
         else:
-            c.execute("INSERT INTO online_users (email, token) VALUES (?,?)", (email, token))
+            c.execute("INSERT INTO online_users (email, token, key) VALUES (?,?,?)", (email, data[0], data[1]))
             c.commit()
 
         return True
@@ -123,6 +135,7 @@ def change_password(token, oldpassword, newpassword):
         # Fetch user information from database
         cur.execute("SELECT * FROM users WHERE email=?", (email,))
         user_info = cur.fetchone()
+
         # Make sure user exists
         if user_info:
             # Check that old password is correct
@@ -185,10 +198,7 @@ def earliest_date():
         cur = c.cursor()
         cur.execute("SELECT MIN(time) FROM messages")
         time=cur.fetchone()
-        if time[0] == None:
-            return "9999-01-01 00:00:00.000000"
-        else:
-            return time
+        return time
     except:
         return False
 
@@ -198,10 +208,7 @@ def newest_date():
         cur = c.cursor()
         cur.execute("SELECT MAX(time) FROM messages")
         time=cur.fetchone()
-        if time[0] == None:
-            return "9999-01-01 00:00:00.000000"
-        else:
-            return time
+        return time
     except:
         return False
 
@@ -233,6 +240,35 @@ def get_city_statistics():
     except:
         return False
 
+# Divide reveived data by given keys and return original data
+def decrypt_data(data):
+    # Kastar om ordningen pa data-objekten - problem!
+    data = json.loads(data)
+
+    # Validates that 
+    if validate_token(data):
+        return {"success": True, "data": data["data"]}
+    else:
+        return {"success": False, "data": data["data"]}
+
+# Validate that token from sender equals token in database
+def validate_token(data):
+    token = data["id"]
+    hash = data["hash"]
+    org_data = data["data"]
+
+    # use token to look up key
+    # use data and key to create new hash
+    # compare new hash with received hash, return true if match, false if not
+    if not token == "null" or token == None:
+        key = get_key_by_token(token)
+        data_to_hash = json.dumps(org_data, sort_keys=True)+str(key)
+        hash_data = hashlib.sha256(data_to_hash).hexdigest()
+
+        return hash_data == hash
+
+    # If no token then user is not signed in yet and no token or key exist
+    return True
 
 def close():
     get_db().close()
