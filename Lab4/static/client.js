@@ -76,7 +76,7 @@ function statistics() {
 }
 socket.onopen = function() {
     if (localStorage.getItem("token") !== null) { //if you are logged in
-        socket.send('{"token":"'+ localStorage.getItem("token")+'", "message": "signin"}');
+        socket.send(data_to_send('{"message": "signin", "token": "'+ localStorage.getItem("token")+'"}'));
     }
 };
 
@@ -101,7 +101,7 @@ socket.onopen = function() {
 
 window.onbeforeunload = function(){
     if (socket.readyState == 1) { //if the connection is connected
-        socket.send('{"token":"' + localStorage.getItem("token") + '", "message": "close connection"}');
+        socket.send(data_to_send('{"message": "close connection", "token": "' + localStorage.getItem("token") + '"}'));
     }
 };
 
@@ -117,7 +117,7 @@ function displayView(){
 		var xhttp = new XMLHttpRequest();
         xhttp.open("POST", "/get_user_data_by_token", true);
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhttp.send("token="+localStorage.getItem("token"));
+        xhttp.send("data="+data_to_send('{"token": "'+ localStorage.getItem("token")+'"}'));
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var serverRespons=JSON.parse(this.responseText);
@@ -146,18 +146,19 @@ function validateSingupForm() {
 	}
 	var email=document.forms["signup"]["email"].value;
 	var password=document.forms["signup"]["password"].value;
-	var params='';
-	params+='email='+email;
-	params+='&password=' +password;
-	params+='&firstname='+document.forms["signup"]["firstname"].value;
-	params+='&familyname='+document.forms["signup"]["familyname"].value;
-	params+='&gender='+ document.forms["signup"]["gender"].value;
-	params+='&city='+ document.forms["signup"]["city"].value;
-	params+='&country='+ document.forms["signup"]["country"].value;
+	var params = {
+	    "email": email,
+        "password": password,
+        "firstname": document.forms["signup"]["firstname"].value,
+        "familyname": document.forms["signup"]["familyname"].value,
+        "gender": document.forms["signup"]["gender"].value,
+        "city": document.forms["signup"]["city"].value,
+        "country": document.forms["signup"]["country"].value
+    };
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/sign_up", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send(params);
+    xhttp.send("data="+data_to_send(JSON.stringify(params)));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
@@ -191,13 +192,14 @@ function signin(email, password){
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/sign_in", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send('email='+email +'&password='+password);
+    xhttp.send("data="+data_to_send('{"email": "'+email+'", "password": "'+password+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
             if (serverRespons.success) {
-                localStorage.setItem("token", serverRespons.data);
-                socket.send('{"token":"'+ localStorage.getItem("token")+'", "message": "signin"}');
+                localStorage.setItem("token", serverRespons.data[0]);
+                localStorage.setItem("key", serverRespons.data[1]);
+                socket.send(data_to_send('{"message": "signin", "token": "'+ localStorage.getItem("token")+'"}'));
                 successMSG(serverRespons.message);
             }else{
                 errorMSG(serverRespons.message);
@@ -229,7 +231,7 @@ function openTab(evt, tabName) {
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_data_by_token", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token"));
+    xhttp.send("data="+data_to_send('{"token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons=JSON.parse(this.responseText);
@@ -257,7 +259,7 @@ function changePassword() {
  	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/change_password", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token")+"&oldpassword="+oldpsw+"&newpassword="+newpsw);
+    xhttp.send("data="+data_to_send('{"newpassword": "'+newpsw+'", "oldpassword": "'+oldpsw+'", "token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
@@ -275,7 +277,7 @@ function signout(){
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/sign_out", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token"));
+    xhttp.send("data="+data_to_send('{"token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
@@ -315,7 +317,7 @@ function savePost(id) {
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/post_message", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token")+"&email="+localStorage.getItem("email")+"&message="+document.getElementById("message"+id).value);
+    xhttp.send("data="+data_to_send('{"email": "'+localStorage.getItem("email")+'", "message": "'+document.getElementById("message"+id).value+'", "token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
@@ -334,7 +336,7 @@ function viewProfileWall() {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_messages_by_email", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token")+"&email="+localStorage.getItem("email"));
+    xhttp.send("data="+data_to_send('{"email": "'+localStorage.getItem("email")+'", "token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons=JSON.parse(this.responseText);
@@ -381,7 +383,7 @@ $('#searchform').on('submit', function(e){
 	var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/get_user_data_by_email", true);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    xhttp.send("token="+localStorage.getItem("token")+"&email="+user);
+    xhttp.send("data="+data_to_send('{"email": "'+user+'", "token": "'+localStorage.getItem("token")+'"}'));
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
             var serverRespons = JSON.parse(this.responseText);
@@ -398,4 +400,21 @@ $('#searchform').on('submit', function(e){
     return false;
 });
 
+// Cryptates data that will be sent to server
+// Data sent is always a string of form {token, hashed data, the actual data}
+function data_to_send(data) {
+    var token = localStorage.getItem("token");
+    var hash_data = "";
 
+    if (token != null) {
+        key = localStorage.getItem("key");
+        hash_data = data + key;
+        hash_data = CryptoJS.SHA256(hash_data).toString();
+    }
+
+    //Must send as JSON. data must be in specific order though...
+    // Data is de-jsonfied in alphabetical order in server, so make a function that json-fies object in that order...
+    send_data = '{"id": "' + localStorage.getItem("token") + '", "hash": "' + hash_data + '", "data": ' + data + '}';
+
+    return send_data;
+}
