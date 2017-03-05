@@ -276,5 +276,31 @@ def validate_token(data):
     # If no token then user is not signed in yet and no token or key exist
     return True
 
+def getGoogleuser(userid):
+    try:
+        # Retrieve user from database based on googleId
+        c = get_db().cursor()
+        c.execute("SELECT * FROM users WHERE googleId=?", (userid,))
+        user_info = c.fetchone()
+
+        # Make sure user exists in database
+        if user_info:
+            return [True, "Successfully signed in.", user_info[0], [token_generator(), token_generator()]]
+        else:
+            return [False, "No such user.","" , ""]
+    except:
+        return [False, "Error", ""]
+
+def add_googleuser(email, firstname, familyname, gender, city, country, userid):
+    if not(get_user_by_email(email)):
+        try:
+            # Store user information in database
+            c = get_db()
+            c.execute("INSERT INTO users (email, firstname, familyname, gender, city, country, googleId) VALUES (?,?,?,?,?,?,?)", (email, firstname, familyname, gender, city, country, userid))
+            c.commit()
+            return True
+        except:
+            return False
+
 def close():
     get_db().close()

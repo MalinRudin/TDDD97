@@ -1,5 +1,11 @@
 var socket = new WebSocket("ws://" + window.location.host + "/socket");
 
+var loaded=false;
+
+window.onload = function () {
+    loaded=true;
+}
+
 $(".tablinks").on('click', function(e){
    e.preventDefault();
    page($(this).data('target'));
@@ -34,7 +40,7 @@ function browse() {
         $( ".tabcontent" ).each(function() {
             $(this).hide();
         });
-
+        localStorage.setItem("email", $("#search").val());
         $('#Browse').show();
     }
 }
@@ -51,7 +57,15 @@ function account() {
         $( ".tabcontent" ).each(function() {
             $(this).hide();
         });
-        $('#Account').show();
+
+        if (loaded) {
+            var auth2 = gapi.auth2.getAuthInstance();
+            if (auth2.isSignedIn.get()) {
+                $('#googleaccount').show();
+            } else {
+                $('#Account').show();
+            }
+        }
     }
 }
 
@@ -82,7 +96,14 @@ socket.onopen = function() {
 
  socket.onmessage = function(event) {
      if (event.data == 'signout') {
-         signout();
+        if (loaded) {
+            var auth2 = gapi.auth2.getAuthInstance();
+            if (auth2.isSignedIn.get()) {
+                googlesignout();
+            } else {
+                signout();
+            }
+        }
      }
      if (event.data == 'liveuser') {
         liveuser();
@@ -199,6 +220,9 @@ function signin(email, password){
             if (serverRespons.success) {
                 localStorage.setItem("token", serverRespons.data[0]);
                 localStorage.setItem("key", serverRespons.data[1]);
+                if (socket.readyState != 1){
+                    socket = new WebSocket("ws://" + window.location.host + "/socket");
+                }
                 socket.send(data_to_send('{"message": "signin", "token": "'+ localStorage.getItem("token")+'"}'));
                 successMSG(serverRespons.message);
             }else{
@@ -288,6 +312,9 @@ function signout(){
 
 		        errorMSG(serverRespons.message);
             }
+            page('/');
+        }else{ //Token invalid, throw them out
+            localStorage.clear();
             page('/');
         }
     };
@@ -417,4 +444,102 @@ function data_to_send(data) {
     send_data = '{"id": "' + localStorage.getItem("token") + '", "hash": "' + hash_data + '", "data": ' + data + '}';
 
     return send_data;
+}
+
+
+function onSignIn(googleUser) {
+    googlesignin();
+}
+
+$('#googleform').on('submit', function(e) {
+    e.preventDefault();
+    var  auth2 = gapi.auth2.getAuthInstance();
+    if(auth2.isSignedIn.get()){
+        var googleUser=auth2.currentUser.get();
+        var profile = googleUser.getBasicProfile();
+        var params = {
+            "id_token": googleUser.getAuthResponse().id_token,
+            "email": profile.getEmail(),
+            "firstname": profile.getGivenName(),
+            "familyname": profile.getFamilyName(),
+            "gender": document.forms["googlesignup"]["googlegender"].value,
+            "city": document.forms["googlesignup"]["googlecity"].value,
+            "country": document.forms["googlesignup"]["googlecountry"].value
+        };
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/googlesignup", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("data="+data_to_send(JSON.stringify(params)));
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var serverRespons = JSON.parse(this.responseText);
+                if (serverRespons.success) {
+                    successMSG(serverRespons.message);
+                    googlesignin();
+                }else{
+                    errorMSG(serverRespons.message);
+
+                }
+
+            }
+        };
+    }
+});
+
+function googlesignin(){
+    if(localStorage.getItem("token") === null) {
+        var auth2 = gapi.auth2.getAuthInstance();
+        var googleUser = auth2.currentUser.get();
+        var id_token = googleUser.getAuthResponse().id_token;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/googlesignin');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function () {
+            var serverRespons = JSON.parse(this.responseText);
+            if (serverRespons.success) {
+                localStorage.setItem("token", serverRespons.data[0]);
+                localStorage.setItem("key", serverRespons.data[1]);
+                if (socket.readyState != 1) {
+                    socket = new WebSocket("ws://" + window.location.host + "/socket");
+                }
+                socket.send(data_to_send('{"message": "signin", "token": "' + localStorage.getItem("token") + '"}'));
+                successMSG(serverRespons.message);
+            } else {
+                successMSG("You need to add some more info");
+                var profile = googleUser.getBasicProfile();
+                $('#googlename').text(profile.getName());
+                $('#googleemail').text(profile.getEmail());
+                $('#googleinput').show();
+            }
+            page('/home');
+        };
+        xhr.send('idtoken=' + id_token);
+    }
+}
+
+function googlesignout() {
+    var auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(function () {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", "/sign_out", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send("data="+data_to_send('{"token": "'+localStorage.getItem("token")+'"}'));
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var serverRespons = JSON.parse(this.responseText);
+                if (serverRespons.success) {
+                    localStorage.clear();
+                    successMSG(serverRespons.message);
+                }else{
+
+                    errorMSG(serverRespons.message);
+                }
+                page('/');
+            }else{ //Token invalid, throw them out
+                localStorage.clear();
+                page('/');
+            }
+        };
+    });
+
 }

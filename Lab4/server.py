@@ -1,8 +1,9 @@
-from geventwebsocket.handler import WebSocketHandler
+from geventwebsocket.handler import WebSocketHandler  # Websocket import
 from geventwebsocket import WebSocketError
-from gevent.pywsgi import WSGIServer
-from flask import request, Flask
+from gevent.pywsgi import WSGIServer    # WSGI server import
+from flask import request, Flask    # Flask import
 from datetime import datetime
+from oauth2client import client, crypt  #   Import for google auth
 
 import json
 app = Flask(__name__)
@@ -47,6 +48,7 @@ def socket():
                 else:
                     print "Not a trusted user"
 
+
             except WebSocketError as e:
                 print(str(e))
                 break  # Stop while loop
@@ -68,7 +70,10 @@ def sign_in():
     [success, message, data]=(database_helper.sign_in(email, password))
     if success:
         if online_users.get(email):
-            online_users[email].send("signout")
+            try:
+                online_users[email].send("signout")
+            except:
+                print "Socket is already dead."
         updateLiveUser()  # update livedata
 
     # Add token and key to database
@@ -81,7 +86,6 @@ def sign_in():
 def sign_up():
     data_obj = database_helper.decrypt_data(request.form['data'])
     data = data_obj["data"]
-    success = data_obj["success"]
 
     email = data["email"]
     password = data['password']
@@ -134,7 +138,7 @@ def sign_out():
             data = {'success': False, 'message': 'Error with sign out'}
             return json.dumps(data)
     else:
-        data = {'success': False, 'message': 'Error'}
+        data = {'success': False, 'message': 'You been logged out by another client.'}
         return json.dumps(data)
 
 @app.route('/change_password', methods=['POST'])
@@ -338,16 +342,24 @@ def liveuser():
 
 def updateLiveUser():
     for user, socket in online_users.items():  # send message to update livedata to online users
-        socket.send("liveuser")
+        try:
+            socket.send("liveuser")
+        except:
+            print "Socket is already dead."
 
 def updateLiveMessage():
     for user, socket in online_users.items():  # send message to update livedata to online users
-        socket.send("livemessage")
+        try:
+            socket.send("livemessage")
+        except:
+            print "Socket is already dead."
 
 def updateLiveCity():
     for user, socket in online_users.items():  # send message to update livedata to online users
-        socket.send("livecity")
-
+        try:
+            socket.send("livecity")
+        except:
+            print "Socket is already dead."
 
 @app.route('/livemessage', methods=["POST"])
 def livemessage():
@@ -364,6 +376,66 @@ def livemessage():
 def livecity():
     data=database_helper.get_city_statistics()
     return json.dumps(data)
+
+@app.route('/googlesignin', methods=["POST"])
+def googlesignin():
+    token = request.form['idtoken']
+    userid=googleverify(token)
+
+    if userid is not False:
+        [success, message, email, data] = database_helper.getGoogleuser(userid)
+        if success:
+            if online_users.get(email):
+                try:
+                    online_users[email].send("signout")
+                except:
+                    print "Socket is already dead."
+            updateLiveUser()  # update livedata
+
+            # Add token and key to database
+            database_helper.add_token(email, data)
+            data = {'success': success, 'message': message, "data": data}
+            return json.dumps(data)
+        else:
+            data = {'success': False, 'message': 'No user exist for this googleid.'}
+            return json.dumps(data)
+    else:
+        data = {'success': False, 'message': 'Invalid token .'}
+        return json.dumps(data)
+
+@app.route('/googlesignup', methods=["POST"])
+def googlesignup():
+    data_obj = database_helper.decrypt_data(request.form['data'])
+    data = data_obj["data"]
+
+    userid = googleverify(data["id_token"])
+    email = data["email"]
+    firstname = data['firstname']
+    familyname = data['familyname']
+    gender = data['gender']
+    city = data['city']
+    country = data['country']
+
+    if database_helper.add_googleuser(email, firstname, familyname, gender, city, country, userid):
+        data={'success': True, 'message': 'Successfully created a new user.'}
+        updateLiveCity()  # update the city statistics
+        return json.dumps(data)
+    else:
+        data = {'success': False, 'message': 'Error, no user created.'}
+        return json.dumps(data)
+
+def googleverify(id_token):
+    GOOGLE_CLIENT_ID = '296246087105-7tgq8nj5jvpr2uu40dauc1a3vicgv2lq.apps.googleusercontent.com'
+    try:
+        idinfo = client.verify_id_token(id_token, GOOGLE_CLIENT_ID)
+
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise crypt.AppIdentityError("Wrong issuer.")
+
+        userid = idinfo['sub']
+        return userid
+    except:
+        return False
 
 if __name__ == '__main__':
     http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
