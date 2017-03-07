@@ -4,22 +4,25 @@ from gevent.pywsgi import WSGIServer    # WSGI server import
 from flask import request, Flask    # Flask import
 from datetime import datetime
 from oauth2client import client, crypt  #   Import for google auth
+from flask import jsonify
 
-import json
 app = Flask(__name__)
 import database_helper
 
 #  Dict for handling online users
 online_users={}
 
+#  Route all client routing
 @app.route('/home')
 @app.route('/browse')
 @app.route('/account')
 @app.route('/statistics')
 @app.route('/')
 def index():
+    #  Send them to the static file client.html
     return app.send_static_file('client.html')
 
+#  route that handel socket XMLHttp requests.
 @app.route('/socket')
 def socket():
     if request.environ.get('wsgi.websocket'):
@@ -34,8 +37,11 @@ def socket():
                 if success:
                     if data["message"] == "close connection":
                         user=database_helper.get_user_by_token(data["token"])
+                        #  There is a user
                         if user is not False:
+                            #  check if it exist in online_users
                             if online_users.get(user[0]):
+                                #  Delete from online_users
                                 del online_users[user[0]]
                         updateLiveUser() #update livedata
                         break  # Stop while loop
@@ -43,6 +49,7 @@ def socket():
                     if data["message"] == "signin":
                         user = database_helper.get_user_by_token(data["token"])
                         if user is not False:
+                            #  add socket to online_users
                             online_users[user[0]]=ws
                         updateLiveUser()  # update livedata
                 else:
@@ -79,7 +86,7 @@ def sign_in():
     # Add token and key to database
     database_helper.add_token(email, data)
     data = {'success': success, 'message': message, "data": data}
-    return json.dumps(data)
+    return jsonify(data)
 
 @app.route('/sign_up', methods=['POST'])
 # sign_up(email, password, firstname, familyname, gender, city, country)
@@ -97,21 +104,21 @@ def sign_up():
 
     if email.find('@')==-1:
         data = {'success': False, 'message': 'Error, invalid email.'}
-        return json.dumps(data)
+        return jsonify(data)
     if len(password)<6:
         data = {'success': False, 'message': 'Error, password to short.'}
-        return json.dumps(data)
+        return jsonify(data)
     if len(email)<1 or len(password)<1 or len(firstname)<1 or len(familyname)<1 or len(gender)<1 or len(city)<1 or len(country)<1:
         data = {'success': False, 'message': 'Error, invalid data.'}
-        return json.dumps(data)
+        return jsonify(data)
 
     if database_helper.add_user(email, password, firstname, familyname, gender, city, country):
         data={'success': True, 'message': 'Successfully created a new user.'}
         updateLiveCity()  # update the city statistics
-        return json.dumps(data)
+        return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error, no user created.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/sign_out', methods=['POST'])
 #sign_out(token)
@@ -133,13 +140,13 @@ def sign_out():
         if database_helper.sign_out(token):
 
             data = {'success': True, 'message': 'Successfully signed out.'}
-            return json.dumps(data)
+            return jsonify(data)
         else:
             data = {'success': False, 'message': 'Error with sign out'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'You been logged out by another client.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/change_password', methods=['POST'])
 #change_password(token, old_password, new_password)
@@ -157,17 +164,17 @@ def change_password():
 
         if len(newpassword)<6:
             data = {'success': False, 'message': 'Error, password to short.'}
-            return json.dumps(data)
+            return jsonify(data)
         if database_helper.is_signed_in(token):
             [success, message]=database_helper.change_password(token, oldpassword, newpassword)
             data = {'success': success, 'message': message}
-            return json.dumps(data)
+            return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error with change password.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/get_user_data_by_token', methods=['POST'])
 #get_user_data_by_token(token)
@@ -192,16 +199,16 @@ def get_user_data_by_token():
                 userdata["city"] = data[5]
                 userdata["country"] = data[6]
                 jsondata = {'success': True, 'message': "User data retrieved.", "data": userdata}
-                return json.dumps(jsondata)
+                return jsonify(jsondata)
             else:
                 data = {'success': False, 'message': 'No such user'}
-                return json.dumps(data)
+                return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error receiving user data.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/get_user_data_by_email', methods=['POST'])
 #get_user_data_by_email(token, email)
@@ -227,16 +234,16 @@ def get_user_data_by_email():
                 userdata["city"] = data[5]
                 userdata["country"] = data[6]
                 jsondata = {'success': True, 'message': "User data retrieved.", "data": userdata}
-                return json.dumps(jsondata)
+                return jsonify(jsondata)
             else:
                 data = {'success': False, 'message': 'No such user'}
-                return json.dumps(data)
+                return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error receiving user data.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/get_user_messages_by_token', methods=['POST'])
 #get_user_messages_by_token(token)
@@ -254,16 +261,16 @@ def get_user_messages_by_token():
             messages = database_helper.get_user_messages_by_token(token)
             if messages:
                 data = {'success': True, 'message': 'User messages retrieved.', 'data': messages}
-                return json.dumps(data)
+                return jsonify(data)
             else:
                 data = {'success': False, 'message': 'No messages found.'}
-                return json.dumps(data)
+                return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error receiving messages.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/get_user_messages_by_email', methods=['POST'])
 #get_user_messages_by_email(token, email)
@@ -282,16 +289,16 @@ def get_user_messages_by_email():
             messages = database_helper.get_user_messages_by_email(email)
             if messages:
                 data = {'success': True, 'message': 'User messages retrieved.', 'data': messages}
-                return json.dumps(data)
+                return jsonify(data)
             else:
                 data = {'success': False, 'message': 'No messages found.'}
-                return json.dumps(data)
+                return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error receiving messages.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/post_message', methods=['POST'])
 #post_message(token, message, email)
@@ -311,16 +318,16 @@ def post_message():
             if database_helper.post_message(token, message, email):
                 data = {'success': True, 'message': 'Message posted'}
                 updateLiveMessage()
-                return json.dumps(data)
+                return jsonify(data)
             else:
                 data = {'success': False, 'message': 'No such user.'}
-                return json.dumps(data)
+                return jsonify(data)
         else:
             data = {'success': False, 'message': 'You are not logged in.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error posting message.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/liveuser', methods=["POST"])
 def liveuser():
@@ -338,7 +345,7 @@ def liveuser():
             else:
                 unknown +=1
     data = {'male' : male, 'female': female, 'unknown': unknown}
-    return json.dumps(data)
+    return jsonify(data)
 
 def updateLiveUser():
     for user, socket in online_users.items():  # send message to update livedata to online users
@@ -370,12 +377,12 @@ def livemessage():
     steps=20
     timestep=timespan/steps #divide the span in 30 pices
     data=database_helper.get_messages_statistics(firsttime, timestep, steps)
-    return json.dumps(data)
+    return jsonify(data)
 
 @app.route('/livecity', methods=["POST"])
 def livecity():
     data=database_helper.get_city_statistics()
-    return json.dumps(data)
+    return jsonify(data)
 
 @app.route('/googlesignin', methods=["POST"])
 def googlesignin():
@@ -395,17 +402,17 @@ def googlesignin():
             # Add token and key to database
             database_helper.add_token(email, data)
             data = {'success': success, 'message': message, "data": data}
-            return json.dumps(data)
+            return jsonify(data)
         else:
             data = {'success': False, 'message': 'No user exist for this googleid.'}
-            return json.dumps(data)
+            return jsonify(data)
     else:
         data = {'success': False, 'message': 'Invalid token .'}
-        return json.dumps(data)
+        return jsonify(data)
 
 @app.route('/googlesignup', methods=["POST"])
 def googlesignup():
-    data_obj = database_helper.decrypt_data(request.form['data'])
+    data_obj = database_helper.decrypt_data(unicode(request.form['data'], 'utf-8'))
     data = data_obj["data"]
 
     userid = googleverify(data["id_token"])
@@ -419,10 +426,10 @@ def googlesignup():
     if database_helper.add_googleuser(email, firstname, familyname, gender, city, country, userid):
         data={'success': True, 'message': 'Successfully created a new user.'}
         updateLiveCity()  # update the city statistics
-        return json.dumps(data)
+        return jsonify(data)
     else:
         data = {'success': False, 'message': 'Error, no user created.'}
-        return json.dumps(data)
+        return jsonify(data)
 
 def googleverify(id_token):
     GOOGLE_CLIENT_ID = '296246087105-7tgq8nj5jvpr2uu40dauc1a3vicgv2lq.apps.googleusercontent.com'

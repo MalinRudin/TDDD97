@@ -1,10 +1,11 @@
 import sqlite3
-from flask import g
+from flask import g, json, jsonify
 import string
 import random
 import datetime
 import hashlib
-import json
+# import json
+
 
 from flask_bcrypt import Bcrypt
 from server import app
@@ -270,7 +271,6 @@ def validate_token(data):
         key = get_key_by_token(token)
         data_to_hash = json.dumps(org_data, sort_keys=True)+str(key)
         hash_data = hashlib.sha256(data_to_hash).hexdigest()
-
         return hash_data == hash
 
     # If no token then user is not signed in yet and no token or key exist
@@ -289,7 +289,7 @@ def getGoogleuser(userid):
         else:
             return [False, "No such user.","" , ""]
     except:
-        return [False, "Error", ""]
+        return [False, "Error", "", ""]
 
 def add_googleuser(email, firstname, familyname, gender, city, country, userid):
     if not(get_user_by_email(email)):
