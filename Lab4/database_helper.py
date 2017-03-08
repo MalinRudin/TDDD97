@@ -5,16 +5,16 @@ import random
 import datetime
 import hashlib
 
-
-
 from flask_bcrypt import Bcrypt
 from server import app
 
 bcrypt = Bcrypt(app)
 
+# Create connection object to represent the database
 def connect_db():
     return sqlite3.connect("database.db")
 
+# Gte the current database connection
 def get_db():
     db = getattr(g, 'db', None)
     if db is None:
@@ -23,6 +23,7 @@ def get_db():
 
 # Add a new user to database
 def add_user(email, password, firstname, familyname, gender, city, country):
+    # If user does not already exist
     if not(get_user_by_email(email)):
         try:
             # Create a hashed version of password for storage
@@ -36,6 +37,7 @@ def add_user(email, password, firstname, familyname, gender, city, country):
         except:
             return False
 
+# Fetch user information from database based on email
 def get_user_by_email(email):
     try:
         c = get_db().cursor()
@@ -44,6 +46,7 @@ def get_user_by_email(email):
     except:
         return False
 
+# Get user email from database based on token
 def get_user_by_token(token):
     try:
         c = get_db().cursor()
@@ -53,6 +56,7 @@ def get_user_by_token(token):
     except:
         return False
 
+# Get user key  from database based on token
 def get_key_by_token(token):
     try:
         c = get_db().cursor()
@@ -77,7 +81,7 @@ def sign_in(email, password):
 
             # Compare hashed password stored in database with given password
             if bcrypt.check_password_hash(password_hash, password):
-                # Return token and key
+                # Return generated token and key
                 return [True, "Successfully signed in.", [token_generator(), token_generator()]]
             else:
                 return [False, "Wrong username or password.", ""]
@@ -87,12 +91,16 @@ def sign_in(email, password):
     except:
         return [False, "Error", ""]
 
+# Add token and key to database
 def add_token(email, data):
     try:
         c = get_db()
         cur = c.cursor()
         cur.execute("SELECT * FROM online_users WHERE email=?", (email,))
 
+        # Check if user exist in database
+        # If so, update database with new token and key
+        # If not, add user, token and key to database
         if cur.fetchone():
             c.execute("UPDATE online_users SET token=?, key=? WHERE email=?", (data[0], data[1], email))
             c.commit()
@@ -104,8 +112,10 @@ def add_token(email, data):
     except:
         return False
 
+# Sign out user based in token
 def sign_out(token):
     try:
+        # Delete user from database/online_users
         c = get_db()
         c.execute("DELETE FROM online_users WHERE token=?", (token,))
         c.commit()
@@ -113,6 +123,7 @@ def sign_out(token):
     except:
         return False
 
+# Check if user is signed in based on token
 def is_signed_in(token):
     try:
         c = get_db().cursor()
@@ -155,6 +166,7 @@ def change_password(token, oldpassword, newpassword):
     except:
         return [False, "Error"]
 
+# Fetch user messages from database based on token
 def get_user_messages_by_token(token):
     try:
         c = get_db().cursor()
@@ -164,6 +176,7 @@ def get_user_messages_by_token(token):
     except:
         return False
 
+# Fetch user messages from database based on email
 def get_user_messages_by_email(email):
     try:
         c = get_db().cursor()
@@ -172,14 +185,18 @@ def get_user_messages_by_email(email):
     except:
         return False
 
+# Save message in database
 def post_message(token, message, email):
     try:
         c = get_db()
         cur = c.cursor()
+        # Fetch email of user that sends the message
         cur.execute("SELECT * FROM online_users WHERE token=?", (token,))
         fromuser=cur.fetchone()[0]
+        # Check if user that receives message exists
         cur.execute("SELECT * FROM users WHERE email=?", (email,))
         if cur.fetchone():
+            # Insert message in database
             c.execute("INSERT INTO messages (fromuser, touser, message, time) VALUES (?,?,?,?)",
                       (fromuser, email, message, str(datetime.datetime.now())))
             c.commit()
@@ -190,10 +207,11 @@ def post_message(token, message, email):
 
         return False
 
+# Generate a random string of characters
 def token_generator(size=36, chars=string.ascii_uppercase+string.ascii_lowercase+string.digits):
     return ''. join(random.choice(chars) for _ in range(size))
 
-#  returns the time of earliest posted message
+#  Returns the time of earliest posted message
 def earliest_date():
     try:
         c = get_db()
@@ -208,7 +226,7 @@ def earliest_date():
     except:
         return False
 
-#  returns the time of latest posted message
+#  Returns the time of latest posted message
 def newest_date():
     try:
         c = get_db()
@@ -250,16 +268,15 @@ def get_city_statistics():
     try:
         c = get_db()
         cur = c.cursor()
-        #  This returns a array were [0] is how many there is that
+        # This returns a array were [0] is how many there is that
         # have the unique combination city [1] and country [2]
         cur.execute("SELECT COUNT(email) AS numberOf, city, country FROM users GROUP BY city, country")
         return cur.fetchall()
     except:
         return False
 
-# Divide receive data by given keys and return original data
+# Divide receive data and return original data
 def decrypt_data(data):
-    # Kastar om ordningen pa data-objekten - problem!
     data = json.loads(data)
 
     # Validates that 
@@ -274,9 +291,9 @@ def validate_token(data):
     hash = data["hash"]
     org_data = data["data"]
 
-    # use token to look up key
-    # use data and key to create new hash
-    # compare new hash with received hash, return true if match, false if not
+    # Use token to look up key in database
+    # Use data and key to create new hash
+    # Compare new hash with received hash, return true if match, false if not
     if not token == "null" or token == None:
         key = get_key_by_token(token)
         data_to_hash = json.dumps(org_data, sort_keys=True)+str(key)
@@ -286,7 +303,7 @@ def validate_token(data):
     # If no token then user is not signed in yet and no token or key exist
     return True
 
-#  returns user data, key and token for google user
+#  Returns user data, key and token for google user
 def getGoogleuser(userid):
     try:
         # Retrieve user from database based on googleId
@@ -314,6 +331,6 @@ def add_googleuser(email, firstname, familyname, gender, city, country, userid):
         except:
             return False
 
-#  closes the database
+#  Closes the database
 def close():
     get_db().close()
