@@ -329,13 +329,16 @@ def post_message():
         data = {'success': False, 'message': 'Error posting message.'}
         return jsonify(data)
 
+#  XMLHttp response for the user statistics
 @app.route('/liveuser', methods=["POST"])
 def liveuser():
     male=0
     female=0
     unknown=0
+    #  Loop over all online users
     for email in online_users.iterkeys():
         data=database_helper.get_user_by_email(email)
+        # Check the gender and update the variables
         if data is not False:
             gender=data[4]
             if gender == "Male":
@@ -347,43 +350,55 @@ def liveuser():
     data = {'male' : male, 'female': female, 'unknown': unknown}
     return jsonify(data)
 
+#  Function called when user statistics is changed login/logout
 def updateLiveUser():
-    for user, socket in online_users.items():  # send message to update livedata to online users
+    #  Send to all online user
+    for user, socket in online_users.items():
         try:
             socket.send("liveuser")
         except:
             print "Socket is already dead."
 
+#  Function called when message statistics is changed -> message posted
 def updateLiveMessage():
-    for user, socket in online_users.items():  # send message to update livedata to online users
+    # send message to all online users
+    for user, socket in online_users.items():
         try:
             socket.send("livemessage")
         except:
             print "Socket is already dead."
 
+# Function called when a new user is created
 def updateLiveCity():
+    # send message to all online users
     for user, socket in online_users.items():  # send message to update livedata to online users
         try:
             socket.send("livecity")
         except:
             print "Socket is already dead."
 
+#  Create message statistics
 @app.route('/livemessage', methods=["POST"])
 def livemessage():
     firsttime=''.join(database_helper.earliest_date())
     lasttime=''.join(database_helper.newest_date())
     format='%Y-%m-%d %H:%M:%S.%f'
+    #  Calculate the timespan between the first and he last message
     timespan=datetime.strptime(lasttime, format) - datetime.strptime(firsttime, format)
     steps=20
-    timestep=timespan/steps #divide the span in 30 pices
+    #  Divide the timespan in to steps
+    timestep=timespan/steps
+    #  Get data from the database
     data=database_helper.get_messages_statistics(firsttime, timestep, steps)
     return jsonify(data)
 
+#  Routing of city statistic, mostly done in database_helper
 @app.route('/livecity', methods=["POST"])
 def livecity():
     data=database_helper.get_city_statistics()
     return jsonify(data)
 
+#  Handles a googlesign in
 @app.route('/googlesignin', methods=["POST"])
 def googlesignin():
     token = request.form['idtoken']
@@ -391,8 +406,11 @@ def googlesignin():
 
     if userid is not False:
         [success, message, email, data] = database_helper.getGoogleuser(userid)
+        #  There is such a user
         if success:
+            #  Already signed in
             if online_users.get(email):
+                #  Logout other clients
                 try:
                     online_users[email].send("signout")
                 except:
@@ -410,11 +428,13 @@ def googlesignin():
         data = {'success': False, 'message': 'Invalid token .'}
         return jsonify(data)
 
+#  Function that signup a google user
 @app.route('/googlesignup', methods=["POST"])
 def googlesignup():
-    data_obj = database_helper.decrypt_data(unicode(request.form['data'], 'utf-8'))
+    data_obj = database_helper.decrypt_data(request.form['data'])
     data = data_obj["data"]
 
+    #  Get google userid
     userid = googleverify(data["id_token"])
     email = data["email"]
     firstname = data['firstname']
@@ -431,6 +451,7 @@ def googlesignup():
         data = {'success': False, 'message': 'Error, no user created.'}
         return jsonify(data)
 
+#  Gets the google userid by it's idtooken
 def googleverify(id_token):
     GOOGLE_CLIENT_ID = '296246087105-7tgq8nj5jvpr2uu40dauc1a3vicgv2lq.apps.googleusercontent.com'
     try:
@@ -444,6 +465,7 @@ def googleverify(id_token):
     except:
         return False
 
+#  Start the server
 if __name__ == '__main__':
     http_server = WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
     http_server.serve_forever()

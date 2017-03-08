@@ -1,15 +1,19 @@
+// Set global variables
 var onlineUserChart=null;
 var messageChart=null;
 var cityChart=null;
 
+// a function that generates random colors
 var randomColorGenerator = function () {
     return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
 };
+// Store the randomcolors for each session, so it's the same until reload.
 var randomcolors=[];
 for (i = 0; i < 5; i++) {
     randomcolors.push(randomColorGenerator());
 }
 
+// This function handles the user statistics
 liveuser = function() {
     var xhttp = new XMLHttpRequest();
         xhttp.open("POST", "/liveuser", true);
@@ -37,9 +41,11 @@ liveuser = function() {
                         ]
                     }]
                 };
+                // Remove the old statistics id there are any
                 if(onlineUserChart !=null){
                     onlineUserChart.destroy();
                 }
+                // set up a new chart
                 onlineUserChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: data,
@@ -56,6 +62,7 @@ liveuser = function() {
 
 }
 
+// function that handles the message statistics
 livemessage = function () {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/livemessage", true);
@@ -74,6 +81,8 @@ livemessage = function () {
                     backgroundColor: randomcolors[3]
                 }]
             };
+
+            // destroy old charts
             if(messageChart !=null){
                 messageChart.destroy();
             }
@@ -99,7 +108,7 @@ livemessage = function () {
 
 }
 
-
+// function for the city statistics
 livecity = function () {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/livecity", true);
@@ -110,6 +119,9 @@ livecity = function () {
             var serverRespons = JSON.parse(this.responseText);
             var cities=[];
             var NumberOfUsers=[];
+            // reshape the data to correct format.
+            // Input [[Num_1, city_1, conuntry_1],[Num_2, city_2, conuntry_2]...]
+            // Output [Num_1, Num_2], [city_and_country_1, city_and_country_2]
             serverRespons.forEach(function (city) {
                 NumberOfUsers.push(city[0]);
                 cities.push(city[1]+", "+city[2]);
@@ -123,6 +135,7 @@ livecity = function () {
                     data: NumberOfUsers,
                 }]
             };
+            // destroy old chart
             if(cityChart !=null){
                 cityChart.destroy();
             }

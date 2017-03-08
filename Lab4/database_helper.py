@@ -1,10 +1,10 @@
 import sqlite3
-from flask import g, json, jsonify
+from flask import g, json
 import string
 import random
 import datetime
 import hashlib
-# import json
+
 
 
 from flask_bcrypt import Bcrypt
@@ -193,12 +193,14 @@ def post_message(token, message, email):
 def token_generator(size=36, chars=string.ascii_uppercase+string.ascii_lowercase+string.digits):
     return ''. join(random.choice(chars) for _ in range(size))
 
+#  returns the time of earliest posted message
 def earliest_date():
     try:
         c = get_db()
         cur = c.cursor()
         cur.execute("SELECT MIN(time) FROM messages")
         time=cur.fetchone()
+        #  Returns a default value if there are no messages in the database
         if time[0] == None:
             return "9999-01-01 00:00:00.000000"
         else:
@@ -206,12 +208,14 @@ def earliest_date():
     except:
         return False
 
+#  returns the time of latest posted message
 def newest_date():
     try:
         c = get_db()
         cur = c.cursor()
         cur.execute("SELECT MAX(time) FROM messages")
         time=cur.fetchone()
+        #  Returns a default value if there are no messages in the database
         if time[0] == None:
             return "9999-01-01 00:00:00.000000"
         else:
@@ -219,16 +223,19 @@ def newest_date():
     except:
         return False
 
+#  Creates message statistics
 def get_messages_statistics(firsttime, timestep, steps):
     data=[]
     timelabel=[]
     format = '%Y-%m-%d %H:%M:%S.%f'
+    #  Loops as many times as there is steps.
     for i in xrange(steps):
         try:
             c = get_db()
             cur = c.cursor()
-
+            #  Create new fromtime, starttime+i*timestep
             fromtime = datetime.datetime.strptime(firsttime, format) + i * timestep
+            #  Create new totime, fromtime+timestep+ 1 second to retrieve even the last message
             totime=fromtime + timestep + datetime.timedelta(0, 1)
             cur.execute("SELECT COUNT(message) FROM messages WHERE time >= DATETIME(?) AND time < DATETIME(?)", (fromtime, totime))
             numberOfMessages=int(''.join(map(str,cur.fetchone())))
@@ -238,16 +245,19 @@ def get_messages_statistics(firsttime, timestep, steps):
             return False
     return [data, timelabel]
 
+#  Creates city statistics
 def get_city_statistics():
     try:
         c = get_db()
         cur = c.cursor()
+        #  This returns a array were [0] is how many there is that
+        # have the unique combination city [1] and country [2]
         cur.execute("SELECT COUNT(email) AS numberOf, city, country FROM users GROUP BY city, country")
         return cur.fetchall()
     except:
         return False
 
-# Divide reveived data by given keys and return original data
+# Divide receive data by given keys and return original data
 def decrypt_data(data):
     # Kastar om ordningen pa data-objekten - problem!
     data = json.loads(data)
@@ -276,6 +286,7 @@ def validate_token(data):
     # If no token then user is not signed in yet and no token or key exist
     return True
 
+#  returns user data, key and token for google user
 def getGoogleuser(userid):
     try:
         # Retrieve user from database based on googleId
@@ -291,6 +302,7 @@ def getGoogleuser(userid):
     except:
         return [False, "Error", "", ""]
 
+#  Adds a google user to the database
 def add_googleuser(email, firstname, familyname, gender, city, country, userid):
     if not(get_user_by_email(email)):
         try:
@@ -302,5 +314,6 @@ def add_googleuser(email, firstname, familyname, gender, city, country, userid):
         except:
             return False
 
+#  closes the database
 def close():
     get_db().close()

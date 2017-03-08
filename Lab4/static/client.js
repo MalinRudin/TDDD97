@@ -549,7 +549,6 @@ $('#googleform').on('submit', function(e) {
         xhttp.open("POST", "/googlesignup", true);
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send("data="+data_to_send(JSON.stringify(params)));
-        xhttp.setCharacterEncoding("UTF-8");
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var serverRespons = JSON.parse(this.responseText);
